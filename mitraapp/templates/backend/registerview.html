@@ -1,0 +1,158 @@
+
+
+
+
+
+  {% include 'backend/header.html' %}
+   {% include 'backend/sidebar.html' %}
+
+
+{% load static %}
+
+ <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>View User Details</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">View User Details</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+<section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">Details</h3>
+              </div>
+
+
+
+
+{%if sel_regform %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <div class="card-body">
+
+             <div class="row">
+                                        <div class="col-md-6">
+                                                   <div class="form-group " >
+                                                         <label >Full Name *</label>
+                                                            <p class="form-control ">{{sel_regform.name}}</p><br>
+                                                      </div>
+                                        </div>
+
+                                         <div class="col-md-6">
+                                                 <div class="form-group " >
+                                                         <label >Referral Code</label>
+                                                      <p class="form-control ">{{sel_regform.referral_code}}</p>
+                                                </div>
+                                         </div>
+                                 </div>
+            </div>
+
+
+             <div class="card-body">
+
+             <div class="row">
+                                        <div class="col-md-6">
+                                                   <div class="form-group " >
+                                                         <label >User Id</label>
+                                                            <p class="form-control ">{{sel_regform.id}}</p>
+                                                      </div>
+                                        </div>
+
+                                         <div class="col-md-6">
+                                                 <div class="form-group " >
+                                                         <label >Mobile Number</label>
+                                                        <p class="form-control ">{{sel_regform.phone_number}}</p>
+                                                </div>
+                                         </div>
+                                 </div>
+            </div>
+             <div class="card-body">
+
+             <div class="row">
+                                        <div class="col-md-6">
+                                                   <div class="form-group " >
+                                                         <label >Created Date</label>
+                                                            <p class="form-control ">{{sel_regform.created_date}}</p><br
+                                                      </div>
+                                        </div>
+
+
+                                 </div>
+            </div>
+
+ <div class="card-body"> <div class="px-5 py-4 row-4">
+
+              <a href="{%  url 'userlist' %}" class="btn btn-danger btn-lg">Back</a>
+            </div>
+ </div>
+            </div>
+
+
+
+        </div>
+
+        {% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </div>
+    </section>
+
+  </div>
+
+</body>
+
+</html>
+{% include 'backend/footer.html' %}
+
+  <!-- /.navbar -->
+
+
+
+

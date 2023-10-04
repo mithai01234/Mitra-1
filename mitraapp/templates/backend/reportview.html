@@ -1,0 +1,105 @@
+
+
+
+
+
+  {% include 'backend/header.html' %}
+   {% include 'backend/sidebar.html' %}
+
+{% load static %}
+
+ <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>View Video</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">View User Details</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+<section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-12">
+            <!-- general form elements -->
+            <div class="card ">
+
+
+
+{%if sel_regform %}
+
+             <div class="card-body">
+
+             <div class="row">
+                                        <div class="col-md-6">
+                                                   <div class="form-group " >
+                                                  Report- <h4>{{sel_regform.reason}}</h4>
+
+                                                         {% if sel_regform.video.file %}
+                                 <video width="750" height="600" controls>
+    <source src="{{  sel_regform.video.file.url }}" >
+    Your browser does not support the video tag.
+</video>
+    {% else %}
+        <p>No Video found.</p>
+    {% endif %}
+                                                      </div>
+                                        </div>
+
+
+                                 </div>
+            </div>
+
+ <div class="card-body"> <div class="px-5 py-4 row-4">
+
+              <a href="{%  url 'reportlist' %}" class="btn btn-danger btn-lg">Back</a>
+            </div>
+ </div>
+            </div>
+
+
+
+        </div>
+
+        {% endif %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      </div>
+    </section>
+
+  </div>
+
+</body>
+
+</html>
+{% include 'backend/footer.html' %}
+
+  <!-- /.navbar -->
+
+
+
+
