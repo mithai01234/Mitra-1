@@ -173,61 +173,75 @@ class VideoViewSet(viewsets.ModelViewSet):
     #
     #     except Exception as e:
     #         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    # def get_queryset(self):
-    #     # Get the user ID from the URL parameter (e.g., /api/videos/?user_id=123)
-    #     user_id = self.request.query_params.get('user_id')#only these line will get the params
-    #     hello = Video.objects.all()
-    #     hello = hello.order_by('-uploaded_at')
-    #     # Filter videos by the user ID if it's provided in the query parameter
-    #     if user_id is not None:
-    #         queryset = Video.objects.filter(user_id=user_id)
-    #
-    #         # Sort the queryset by the last uploaded date in descending order (newest first)
-    #         queryset = queryset.order_by('-uploaded_at')
-    #
-    #         return queryset
-    #     else:
-    #         # If user_id is not provided, return all videos
-    #         return hello
-
     def get_queryset(self):
-         # Get the user ID from the URL parameter (e.g., /api/videos/?user_id=123)
-         user_id = self.request.query_params.get('user_id')
-         # Initialize the BlobServiceClient
-         blob_service_client = BlobServiceClient(
-             account_url=f'https://{settings.AZURE_ACCOUNT_NAME}.blob.core.windows.net',
-             credential=settings.AZURE_ACCOUNT_KEY
-         )
-         # Get the container client
-         container_client = blob_service_client.get_container_client(settings.AZURE_CONTAINER)
-         # List blobs in the container
-         blob_list = container_client.list_blobs()
-         # Create a queryset of Video objects based on the user_id
-         queryset = Video.objects.none()  # Initialize an empty queryset
-         for blob in blob_list:
-             # Assuming you have stored the user_id as metadata with the blob
-             if blob.metadata.get('user_id') == user_id:
-                 video = Video(file=blob.name, title=blob.metadata.get('title', ''),
-                               description=blob.metadata.get('description', ''))
-                 queryset |= Video.objects.filter(file=blob.name)
-         # Sort the queryset by the last uploaded date in descending order (newest first)
-         queryset = queryset.order_by('-uploaded_at')
-         return queryset
+        # Get the user ID from the URL parameter (e.g., /api/videos/?user_id=123)
+        user_id = self.request.query_params.get('user_id')#only these line will get the params
+        hello = Video.objects.all()
+        hello = hello.order_by('-uploaded_at')
+        # Filter videos by the user ID if it's provided in the query parameter
+        if user_id is not None:
+            queryset = Video.objects.filter(user_id=user_id)
 
-         @action(detail=True, methods=['post'])
-         def like(self, request, pk=None):
-             video = self.get_object()
-             user = request.user
-             # Check if the user has already liked the video
-             existing_like = Like.objects.filter(user=user, video=video).first()
-             if existing_like:
-                 # Unlike the video if the user has already liked it
-                 existing_like.delete()
-                 return Response({"message": "Video unliked successfully"}, status=status.HTTP_200_OK)
-             else:
-                 # Like the video
-                 Like.objects.create(user=user, video=video)
-                 return Response({"message": "Video liked successfully"}, status=status.HTTP_201_CREATED)
+            # Sort the queryset by the last uploaded date in descending order (newest first)
+            queryset = queryset.order_by('-uploaded_at')
+
+            return queryset
+        else:
+            # If user_id is not provided, return all videos
+            return hello
+
+            @action(detail=True, methods=['post'])
+            def like(self, request, pk=None):
+                video = self.get_object()
+                user = request.user
+                # Check if the user has already liked the video
+                existing_like = Like.objects.filter(user=user, video=video).first()
+                if existing_like:
+                    # Unlike the video if the user has already liked it
+                    existing_like.delete()
+                    return Response({"message": "Video unliked successfully"}, status=status.HTTP_200_OK)
+                else:
+                    # Like the video
+                    Like.objects.create(user=user, video=video)
+                    return Response({"message": "Video liked successfully"}, status=status.HTTP_201_CREATED)
+    # def get_queryset(self):
+    #      # Get the user ID from the URL parameter (e.g., /api/videos/?user_id=123)
+    #      user_id = self.request.query_params.get('user_id')
+    #      # Initialize the BlobServiceClient
+    #      blob_service_client = BlobServiceClient(
+    #          account_url=f'https://{settings.AZURE_ACCOUNT_NAME}.blob.core.windows.net',
+    #          credential=settings.AZURE_ACCOUNT_KEY
+    #      )
+    #      # Get the container client
+    #      container_client = blob_service_client.get_container_client(settings.AZURE_CONTAINER)
+    #      # List blobs in the container
+    #      blob_list = container_client.list_blobs()
+    #      # Create a queryset of Video objects based on the user_id
+    #      queryset = Video.objects.none()  # Initialize an empty queryset
+    #      for blob in blob_list:
+    #          # Assuming you have stored the user_id as metadata with the blob
+    #          if blob.metadata.get('user_id') == user_id:
+    #              video = Video(file=blob.name, title=blob.metadata.get('title', ''),
+    #                            description=blob.metadata.get('description', ''))
+    #              queryset |= Video.objects.filter(file=blob.name)
+    #      # Sort the queryset by the last uploaded date in descending order (newest first)
+    #      queryset = queryset.order_by('-uploaded_at')
+    #      return queryset
+
+         # @action(detail=True, methods=['post'])
+         # def like(self, request, pk=None):
+         #     video = self.get_object()
+         #     user = request.user
+         #     # Check if the user has already liked the video
+         #     existing_like = Like.objects.filter(user=user, video=video).first()
+         #     if existing_like:
+         #         # Unlike the video if the user has already liked it
+         #         existing_like.delete()
+         #         return Response({"message": "Video unliked successfully"}, status=status.HTTP_200_OK)
+         #     else:
+         #         # Like the video
+         #         Like.objects.create(user=user, video=video)
+         #         return Response({"message": "Video liked successfully"}, status=status.HTTP_201_CREATED)
 class LikeViewSet(viewsets.ModelViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
