@@ -149,5 +149,11 @@ def send_otp_to_email(email, otp):
 
 def create_or_update_otp(user, otp):
     otp_obj, created = OTP.objects.get_or_create(user=user)
+
+    # Check if the OTP is being created for the first time or is being updated
+    if not created:
+        # If the OTP record already exists, reset is_used to False
+        otp_obj.is_used = False
+
     otp_obj.otp_value = otp
     otp_obj.save()
