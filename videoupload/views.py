@@ -119,11 +119,12 @@ class VideoViewSet(viewsets.ModelViewSet):
             compressed_video_path = "compressed_video.mp4"
 
             # Define the target resolution and bitrate (adjust as needed)
-            target_resolution = (640, 360)
+            original_width, original_height = video.size
+
             target_bitrate = "500k"
 
             # Resize the video to the target resolution
-            resized_video = video.resize(target_resolution)
+            resized_video = video.resize((original_width, original_height))
 
             # Write the compressed video to the output file with the specified bitrate
             resized_video.write_videofile(compressed_video_path, codec="libx264", bitrate=target_bitrate)
