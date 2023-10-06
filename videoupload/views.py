@@ -23,7 +23,7 @@ from azure.storage.blob import BlobServiceClient, ContentSettings
 import os
 from azure.storage.blob import BlobServiceClient, BlobClient, ContentSettings
 from django.conf import settings
-
+import uuid
 from moviepy.editor import VideoFileClip
 from rest_framework import status
 from rest_framework.response import Response
@@ -69,7 +69,7 @@ class VideoViewSet(viewsets.ModelViewSet):
                 container_client = blob_service_client.get_container_client(settings.AZURE_CONTAINER)
 
                 # Generate a unique blob name for the video file
-                blob_name = f'{title}_compressed.mp4'
+                blob_name = f'{title}_{uuid.uuid4()}_compressed.mp4'
 
                 # Get the BlobClient for the video file
                 blob_client = container_client.get_blob_client(blob_name)
@@ -119,6 +119,7 @@ class VideoViewSet(viewsets.ModelViewSet):
             compressed_video_path = "compressed_video.mp4"
 
             # Define the target resolution and bitrate (adjust as needed)
+            # target_resolution = (640, 360)
             original_width, original_height = video.size
 
             target_bitrate = "500k"
