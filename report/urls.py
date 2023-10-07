@@ -15,4 +15,4 @@ urlpatterns = [
     path('backend/reportlist/delete_item/<int:myid>/', delete_item, name="reportlist/delete_item"),
     path('backend/reportlist/activate_catagory/<int:catagory_id>/', activate_catagory, name='reportlist/activate_catagory'),
     path('backend/reportlist/deactivate_catagory/<int:catagory_id>/', deactivate_catagory, name='reportlist/deactivate_catagory'),
-]
+] 
