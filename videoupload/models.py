@@ -15,6 +15,7 @@ class Video(models.Model):
     status = models.BooleanField(default=True)
     share_count = models.PositiveIntegerField(default=0)
     video_blob_name = models.CharField(max_length=255,null=True)
+    thumbnail = models.ImageField(upload_to='videos/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.id}"

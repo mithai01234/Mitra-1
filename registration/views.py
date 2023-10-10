@@ -4,42 +4,186 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
-from .serializers import CustomUserSerializer,ReferralSerializer,PasswordResetSerializer,PasswordUpdateSerializer
+from .serializers import CustomUserSerializer,PasswordResetSerializer,PasswordUpdateSerializer
 import boto3
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import CustomUser,OTP
+from .models import CustomUser, OTP,  TableJoining
 # from .serializers import UserProfileSerializer
 from rest_framework import viewsets
 from rest_framework import viewsets
-
+from decimal import Decimal
 from django.core.mail import send_mail
 import random
 from django.conf import settings
-
+from rest_framework.permissions import BasePermission
+from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import api_view
+from decimal import Decimal
+
 class RegistrationView(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
 
-        print(request.data, "============")
         if serializer.is_valid():
             user = serializer.save()
 
-            refresh = RefreshToken.for_user(user)
+            # Check if a referral code was provided by the user
+            referral_code = request.data.get('referral_code')
+            if referral_code:
+                try:
+                    referrer = CustomUser.objects.get(username_code=referral_code)
 
-            response_data = {
-                'refresh': str(refresh)
-                ,
-                'access': str(refresh.access_token),
-            }
-            return Response(response_data, status=201)
+                    # Determine the level of the new user
+                    if referrer.username_code:
+                        sponsor_username_code = referrer.username_code
+                        try:
+                            sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+                        except CustomUser.DoesNotExist:
+                            sponsor = None
+
+                        if sponsor:
+                            user_level = sponsor.level + 1
+                        else:
+                            user_level = 1
+                    else:
+                        user_level = 1
+
+                    # Set the level for the new user
+                    user.level = user_level
+                    user.save()
+
+
+
+
+
+
+
+
+                    if referrer.username_code:
+                        sponsor_username_code = referrer.username_code
+                        try:
+                            sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+                        except CustomUser.DoesNotExist:
+                            sponsor = None
+
+                        if sponsor:
+                            # Define the reward amount based on the level
+                            amount=0.40
+
+                            # Create a TableJoining record for the sponsor at this level
+                            TableJoining.objects.create(uid=sponsor, sponser_id=user, amount=amount,
+                                                        total_amount=sponsor.total_amount)
+
+                            # Update the total_amount for the sponsor
+                            sponsor.total_amount += Decimal(amount)
+                            sponsor.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    # Generate income for referrers at different levels
+                    for level in range(1, user_level+1):
+                        # Check if the referrer has a sponsor at this level
+                        if referrer.referral_code:
+                            sponsor_username_code = referrer.referral_code
+                            try:
+                                sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+                            except CustomUser.DoesNotExist:
+                                sponsor = None
+
+                            if sponsor:
+                                # Define the reward amount based on the level
+                                if level == 1:
+                                    amount = 0.15
+                                elif level == 2:
+                                    amount = 0.10
+                                elif level == 3:
+                                    amount = 0.10
+                                elif level == 4:
+                                    amount = 0.10
+                                elif level == 5:
+                                    amount = 0.10
+                                elif level == 6:
+                                    amount = 0.05
+                                elif level == 7:
+                                    amount = 0.05
+                                elif level == 8:
+                                    amount = 0.05
+                                elif level == 9:
+                                    amount = 0.05
+                                elif level == 10:
+                                    amount = 0.03
+                                elif level == 11:
+                                    amount = 0.03
+                                elif level == 12:
+                                    amount = 0.03
+                                elif level == 13:
+                                    amount = 0.02
+                                elif level == 14:
+                                    amount = 0.02
+                                else:
+                                    amount = 0.0  # Adjust for higher levels as needed
+
+                                # Create a TableJoining record for the sponsor at this level
+                                TableJoining.objects.create(uid=sponsor, sponser_id=user, amount=amount,
+                                                            total_amount=sponsor.total_amount)
+
+                                # Update the total_amount for the sponsor
+                                sponsor.total_amount += Decimal(amount)
+                                sponsor.save()
+
+                                # Set the sponsor as the new referrer for the next level
+                                referrer = sponsor
+                            else:
+                                # No sponsor at this level, break out of the loop
+                                break
+
+                except CustomUser.DoesNotExist:
+                    pass
+
+            return Response({'message': 'Registration successful'}, status=201)
+
         return Response(serializer.errors, status=400)
-
-
+# {
+#     "phone_number":
+#         "444444444"
+#     ,
+#     "name":
+#         "This field is required."
+#     ,
+#     "password":
+#         "qwhhjhrr@123"
+#     ,
+#     "email":
+#         "ftyf44545tf@gmail.com"
+#     , "referral_code": "admi_9174"
+#
+# }
+# def assign_referral_points(referral, referring_user):
+#     # Calculate the points based on the referring user's level
+#     referral_level = referring_user.referral.level
+#     points = Decimal('0.02') * (2 ** (referral_level - 1))
+#
+#     # Update the referral's level and points
+#     referral.level = referral_level + 1
+#     referral.points = points
+#     referral.save()
+#
 
 class LoginView(APIView):
+
     def post(self, request):
         phone = request.data.get('phone_number')
         password = request.data.get('password')
@@ -54,7 +198,10 @@ class LoginView(APIView):
                             "message": "Customer logged in successfully",
                             "User": {
                                 "id": str(user.id),
-                               # Add the user's profile pic if available
+                               # Add the user's profile pic if
+                                "referral_code":user.referral_code,
+                                "username_code":user.username_code,
+                                "slug":user.slug,
                                 "name": user.name,
                                 "phone_number": user.phone_number,
                                 "create_date": user.created_date.strftime('%Y-%m-%d'),  # Format the date as needed

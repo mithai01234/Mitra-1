@@ -31,7 +31,8 @@ from rest_framework import viewsets
 from .models import Video
 from .serializers import VideoSerializer
 from azure.storage.blob import BlobServiceClient, ContentSettings
-
+import moviepy.editor as mp
+from PIL import Image
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
@@ -69,28 +70,65 @@ class VideoViewSet(viewsets.ModelViewSet):
                 container_client = blob_service_client.get_container_client(settings.AZURE_CONTAINER)
 
                 # Generate a unique blob name for the video file
-                blob_name = f'{title}_{uuid.uuid4()}_compressed.mp4'
+                video_blob_name = f'{title}_{uuid.uuid4()}_compressed.mp4'
 
                 # Get the BlobClient for the video file
-                blob_client = container_client.get_blob_client(blob_name)
+                video_blob_client = container_client.get_blob_client(video_blob_name)
 
                 # Upload the compressed video to Azure Blob Storage
-                with open(compressed_video_path, "rb") as data:
-                    blob_client.upload_blob(data, content_settings=ContentSettings(content_type="video/mp4"))
+                with open(compressed_video_path, "rb") as video_data:
+                    video_blob_client.upload_blob(video_data, content_settings=ContentSettings(content_type="video/mp4"))
 
-                # Save the video data to the database
-                serializer.save(file=blob_name)
+                # Generate a thumbnail from the video and save it
+                thumbnail_path = self.generate_and_save_thumbnail(temporary_video_path)
+
+                # Generate a unique blob name for the thumbnail file
+                thumbnail_blob_name = f'{title}_{uuid.uuid4()}_thumbnail.jpg'
+
+                # Get the BlobClient for the thumbnail file
+                thumbnail_blob_client = container_client.get_blob_client(thumbnail_blob_name)
+
+                # Upload the thumbnail image to Azure Blob Storage
+                with open(thumbnail_path, "rb") as thumbnail_data:
+                    thumbnail_blob_client.upload_blob(thumbnail_data, content_settings=ContentSettings(content_type="image/jpeg"))
+
+                # Save the video data to the database, including the video and thumbnail blob names
+                serializer.save(file=video_blob_name, thumbnail=thumbnail_blob_name)
 
                 # Clean up temporary files
                 os.remove(temporary_video_path)
                 os.remove(compressed_video_path)
+                os.remove(thumbnail_path)
 
-                return Response({'message': 'Video uploaded and compressed successfully'}, status=status.HTTP_201_CREATED)
+                return Response({'message': 'Video uploaded and compressed successfully'},
+                                status=status.HTTP_201_CREATED)
 
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def generate_and_save_thumbnail(self, video_path):
+        try:
+            # Load the video using MoviePy
+            video = mp.VideoFileClip(video_path)
+
+            # Generate the thumbnail from the first frame of the video
+            thumbnail = video.get_frame(0)
+
+            # Define the output file path for the thumbnail
+            thumbnail_path = "thumbnail.jpg"
+
+            # Save the thumbnail image using PIL
+            thumbnail_image = Image.fromarray(thumbnail)
+            thumbnail_image.save(thumbnail_path)
+
+            return thumbnail_path
+        except Exception as e:
+            # Handle any errors that may occur during thumbnail creation
+            print(f"Thumbnail creation error: {str(e)}")
+            return None
+
 
     def save_uploaded_video(self, uploaded_video):
         try:

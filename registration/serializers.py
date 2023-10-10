@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from .models import Referral
+# from .models import Referral
 # from .models import UserProfile
 User = get_user_model()
 
@@ -15,12 +15,15 @@ class CustomUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
-class ReferralSerializer(serializers.ModelSerializer):
+# class ReferralSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Referral
+#         fields = '__all__'
+# from rest_framework import serializers
+class PersonSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Referral
-        fields = '__all__'
-from rest_framework import serializers
-
+        model = User  # Replace with your actual model
+        fields = '__all__'  # Serialize all fields of the model
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 from .models import OTP
@@ -43,6 +46,15 @@ class PasswordUpdateSerializer(serializers.Serializer):
 # "password":"Srutee123456",
 #
 #
+# "referral_code":"dsfsdf"
+#
+# }
+# {
+# "phone_number":"9823082902",
+# "name":"Srutee",
+# "password":"Srutee123456",
+#
+# "email":"fghast@gmail.com",
 # "referral_code":"dsfsdf"
 #
 # }

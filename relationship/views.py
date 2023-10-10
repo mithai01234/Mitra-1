@@ -5,7 +5,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .models import Follow
 from registration.models import CustomUser
-
+from rest_framework.permissions import BasePermission
+from rest_framework_api_key.permissions import HasAPIKey
 @api_view(['POST'])
 def toggle_follow(request):
     target_user_id = request.data.get('target_user_id')

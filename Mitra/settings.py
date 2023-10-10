@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mitraapp',
-    'rest_framework',
+     'rest_framework',
+    'rest_framework_api_key',
     'corsheaders',
     'registration',
     'videoupload',
@@ -47,6 +48,24 @@ INSTALLED_APPS = [
     # 'chatapp'
 
 ]
+from decouple import config
+
+# API_KEY = "tb2V8II2"
+# API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework_api_key.permissions.HasAPIKey',
+#     ],
+#     # Other DRF settings...
+# }
+# REST_FRAMEWORK_API_KEY = {
+#     'DEFAULTS': {
+#         'DEFAULT_AUTHENTICATION_CLASSES': (
+#             'rest_framework_api_key.authentication.DefaultAPIKeyAuthentication',
+#         ),
+#         'DEFAULT_KEY': 'your_default_api_key_here',
+#     },
+# }
 # REST_FRAMEWORK = {
 #     'DEFAULT_AUTHENTICATION_CLASSES': [
 #         'rest_framework.authentication.TokenAuthentication',
@@ -75,6 +94,7 @@ MIDDLEWARE = [
      'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -84,12 +104,13 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+
 ]
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ],
+# }
 
 ROOT_URLCONF = 'Mitra.urls'
 CORS_ORIGIN_ALLOW_ALL = True
@@ -130,7 +151,18 @@ DATABASES = {
         'HOST': 'sspmitra.postgres.database.azure.com',
         'PORT': '5432',  # The default PostgreSQL port
     }
-}
+#       'custom_user_db': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'postgres',
+#         'USER': 'postgresqladmin',
+#         'PASSWORD': 'Siance@123',
+#         'HOST': 'chatdb.postgres.database.azure.com',
+#         'PORT': '5432',  # The default PostgreSQL port
+#     },
+ }
+# DATABASE_ROUTERS = [
+#     'Mitra.custom_user_router.CustomUserRouter',
+# ]
 
 
 
@@ -239,4 +271,4 @@ DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
 AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
 
 MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
