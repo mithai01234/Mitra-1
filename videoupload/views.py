@@ -434,9 +434,12 @@ class VideoShareView(generics.UpdateAPIView):
         # Assuming you have a 'shared_by' field in your model.
         # video.shared_by.add(user_id)  # Modify this based on your model structure.
 
-        video.save()
 
-        return Response({'message': 'Video share count incremented successfully.'}, status=status.HTTP_200_OK)
+        video.save()
+        response_data = {
+            'share_count': video.share_count
+        }
+        return Response({'message': 'Video share count incremented successfully.',**response_data}, status=status.HTTP_200_OK)
 
 # class GetVideoLink(APIView):
 #     def get(self, request):
