@@ -286,12 +286,13 @@ class LikeViewSet(viewsets.ModelViewSet):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
 
-    @action(detail=True, methods=['post'])
-    def toggle_like(self, request, video_pk=None):
-        video = Video.objects.get(pk=video_pk)
-        User = get_user_model()
-        user_pk = request.query_params.get('user_pk')
-        user = User.objects.get(pk=user_pk)
+    @action(detail=False, methods=['post'])  # Set detail to False
+    def toggle_like(self, request):
+        user_id = request.data.get('user_id')
+        video_id = request.data.get('video_id')
+
+        user = get_object_or_404(get_user_model(), pk=user_id)
+        video = get_object_or_404(Video, pk=video_id)
 
         existing_like = Like.objects.filter(user=user, video=video).first()
 
@@ -304,11 +305,16 @@ class LikeViewSet(viewsets.ModelViewSet):
 
         return Response({"message": message}, status=status.HTTP_200_OK)
 
+
     @action(detail=True, methods=['get'])
     def like_count(self, request, video_pk=None):
-        video = Video.objects.get(pk=video_pk)
+        video_id = request.query_params.get('video_id')
+
+        video = get_object_or_404(Video, pk=video_id)
+
         likes = Like.objects.filter(video=video, is_like=True)
         like_data = [{'username': like.user.name} for like in likes]
+
         return Response({"like_count": len(like_data), "likes": like_data}, status=status.HTTP_200_OK)
 # Create your views here.
 
@@ -407,15 +413,6 @@ class CommentDeleteView(generics.DestroyAPIView):
 
 
 
-# class VideoShareView(generics.UpdateAPIView):
-#     queryset = Video.objects.all()
-#     serializer_class = VideoUpdateSerializer
-
-#     def update(self, request, *args, **kwargs):
-#         video = self.get_object()
-#         video.share_count += 1
-#         video.save()
-#         return Response({'message': 'Video share count incremented successfully.'}, status=status.HTTP_200_OK)
 class VideoShareView(generics.UpdateAPIView):
     queryset = Video.objects.all()
     serializer_class = VideoUpdateSerializer
@@ -434,13 +431,11 @@ class VideoShareView(generics.UpdateAPIView):
         # Assuming you have a 'shared_by' field in your model.
         # video.shared_by.add(user_id)  # Modify this based on your model structure.
 
-
         video.save()
         response_data = {
             'share_count': video.share_count
         }
         return Response({'message': 'Video share count incremented successfully.',**response_data}, status=status.HTTP_200_OK)
-
 # class GetVideoLink(APIView):
 #     def get(self, request):
 #         video_title = request.query_params.get('title')
