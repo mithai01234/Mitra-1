@@ -20,5 +20,5 @@ urlpatterns = [
     path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
 
     path('api/get_video_link/', GetVideoLink.as_view(), name='get_video_link'),#get the video link
-    path('videos/<int:pk>/share/', VideoShareView.as_view(), name='video-share'),#update and increase the share count at the every click of copy button
+    path('videos/share/', VideoShareView.as_view(), name='video-share'),#update and increase the share count at the every click of copy button
 ]
