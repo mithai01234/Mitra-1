@@ -407,16 +407,36 @@ class CommentDeleteView(generics.DestroyAPIView):
 
 
 
+# class VideoShareView(generics.UpdateAPIView):
+#     queryset = Video.objects.all()
+#     serializer_class = VideoUpdateSerializer
+
+#     def update(self, request, *args, **kwargs):
+#         video = self.get_object()
+#         video.share_count += 1
+#         video.save()
+#         return Response({'message': 'Video share count incremented successfully.'}, status=status.HTTP_200_OK)
 class VideoShareView(generics.UpdateAPIView):
     queryset = Video.objects.all()
     serializer_class = VideoUpdateSerializer
 
     def update(self, request, *args, **kwargs):
-        video = self.get_object()
-        video.share_count += 1
-        video.save()
-        return Response({'message': 'Video share count incremented successfully.'}, status=status.HTTP_200_OK)
+        video_id = request.data.get('video_id')
+        user_id = request.data.get('user_id')
 
+        try:
+            video = Video.objects.get(pk=video_id)
+        except Video.DoesNotExist:
+            return Response({'message': 'Video not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        video.share_count += 1
+        # Optionally, you can associate this action with the user.
+        # Assuming you have a 'shared_by' field in your model.
+        # video.shared_by.add(user_id)  # Modify this based on your model structure.
+
+        video.save()
+
+        return Response({'message': 'Video share count incremented successfully.'}, status=status.HTTP_200_OK)
 
 # class GetVideoLink(APIView):
 #     def get(self, request):
