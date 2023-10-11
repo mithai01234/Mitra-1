@@ -453,13 +453,13 @@ class VideoShareView(generics.UpdateAPIView):
 #             return Response({'error': 'Video not found.'}, status=status.HTTP_404_NOT_FOUND)
 class GetVideoLink(APIView):
     def get(self, request):
-        video_title = request.query_params.get('title')
+        video_title = request.query_params.get('id')
 
         if not video_title:
-            return Response({'error': 'Title parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Id parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            video = Video.objects.get(title=video_title)
+            video = Video.objects.get(pk=video_title)
             video_link = request.build_absolute_uri(settings.MEDIA_URL + video.file.name)
             return Response({'video_link': video_link}, status=status.HTTP_200_OK)
         except Video.DoesNotExist:
