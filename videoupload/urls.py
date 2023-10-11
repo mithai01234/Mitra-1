@@ -9,8 +9,8 @@ router.register(r'likes', LikeViewSet)
 urlpatterns = [
     # ... other URL patterns ...
     path('api/', include(router.urls)),
-    path('videos/<int:video_pk>/toggle_like/', LikeViewSet.as_view({'post': 'toggle_like'}), name='video-toggle-like'),
-    path('videos/<int:video_pk>/like_count/',LikeViewSet.as_view({'get': 'like_count'}), name='video-like-count'),
+    path('videos/toggle_like/', LikeViewSet.as_view({'post': 'toggle_like'}), name='video-toggle-like'),
+    path('likes/like_count/',LikeViewSet.as_view({'get': 'like_count'}), name='video-like-count'),
     path('comment/', CommentCreateView.as_view(), name='comment-create'),
     # path('comment/<int:pk>/', CommentEditView.as_view(), name='comment-edit-delete'),  # Edit and Delete Comment
     # path('comments/<int:video_id>/', CommentListView.as_view(), name='comment-list'),
@@ -20,5 +20,5 @@ urlpatterns = [
     path('comments/<int:pk>/delete/', CommentDeleteView.as_view(), name='comment-delete'),
 
     path('api/get_video_link/', GetVideoLink.as_view(), name='get_video_link'),#get the video link
-    path('videos/share/', VideoShareView.as_view(), name='video-share'),#update and increase the share count at the every click of copy button
+    path('videos/share/', VideoShareView.as_view(), name='video-share'),
 ]
