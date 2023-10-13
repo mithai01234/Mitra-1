@@ -1,7 +1,7 @@
 
 from .views import *
 from django.urls import path
-
+ 
 urlpatterns = [
      path('backend/videolist/', video, name="videolist"),
      path('backend/videolist/delete_item/<int:myid>/', delete_item, name="videolist/delete_item"),
