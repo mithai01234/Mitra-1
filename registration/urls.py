@@ -11,6 +11,8 @@ urlpatterns = [
     path('request-password-reset/', request_password_reset, name='request_password_reset'),
     path('verify-otp/', verify_otp, name='verify_otp'),
     path('update-password/', update_password, name='update_password'),
+    path('wallet/', user_profile, name='user-profile'),
 ]
+
 
 
