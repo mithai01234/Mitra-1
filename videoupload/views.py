@@ -384,6 +384,7 @@ class CommentCountView(generics.RetrieveAPIView):
         # Calculate the total comment count as the sum of top-level comments and replies
         total_comment_count = comment_count + reply_count
 
+
         # Get comments and their associated replies
         comment_data = []
 

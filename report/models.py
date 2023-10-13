@@ -1,5 +1,6 @@
 
 from django.db import models
+
 from registration.models import CustomUser
 from videoupload.models import Video
 
