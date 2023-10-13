@@ -181,7 +181,35 @@ class RegistrationView(APIView):
 #     referral.points = points
 #     referral.save()
 #
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
+def user_profile(request):
+    user_id = request.GET.get('user_id')
+
+    if user_id is not None:
+        user = get_object_or_404(CustomUser, id=user_id)
+        referred_users = TableJoining.objects.filter(uid=user)
+        referred_users_data = []
+
+        for referred_user in referred_users:
+            referred_users_data.append({
+                'username': referred_user.sponser_id.name,
+                'date': referred_user.created_date,
+                'income': referred_user.amount,
+                'level': referred_user.sponser_id.level,
+            })
+
+        user_profile_data = {
+            'username_code': user.username_code,
+            'level': user.level,
+            'total_income': user.total_amount,
+            'referred_users': referred_users_data,
+        }
+
+        return JsonResponse(user_profile_data)
+
+    return JsonResponse({'error': 'User not found'}, status=404)
 class LoginView(APIView):
 
     def post(self, request):
