@@ -313,7 +313,7 @@ class LikeViewSet(viewsets.ModelViewSet):
         video = get_object_or_404(Video, pk=video_id)
 
         likes = Like.objects.filter(video=video, is_like=True)
-        like_data = [{'username': like.user.name} for like in likes]
+        like_data = [{'username': like.user.name,'uid':like.user.id} for like in likes]
 
         return Response({"like_count": len(like_data), "likes": like_data}, status=status.HTTP_200_OK)
 # Create your views here.
