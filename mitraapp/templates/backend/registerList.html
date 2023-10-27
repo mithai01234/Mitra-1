@@ -74,7 +74,8 @@
 
                         <td>
                             <a href="{% url 'userlist/view_item' i.id %}" class="view" title="View" data-toggle="tooltip"><i class="fa fa-eye"></i></a>
-
+                             <a href="{% url 'userlist/user_profile' i.id %}" class="moneysign" title="Money Sign" data-toggle="tooltip"><i class="fa fa-heart"></i></a>
+                             <a href="{% url 'userlist/share_income' i.id %}" class="moneysign" title="Money Sign" data-toggle="tooltip"><i class="fa fa-location-arrow"></i></a>
                         </td>
                     </tr>
                 {% endfor %}

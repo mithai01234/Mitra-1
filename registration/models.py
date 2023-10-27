@@ -54,6 +54,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     id= models.AutoField(primary_key=True)
     phone_number = models.CharField(max_length=15, unique=True)  # You can adjust the max_length as needed.
     name = models.CharField(max_length=255)
+    bio=models.CharField(max_length=255,default='')
+    profile_photo=models.ImageField(upload_to='videos/', null=True, blank=True)
     referral_code = models.CharField(max_length=10, blank=True, null=True)
     password = models.CharField(max_length=128)  # Store the password as a hash.
     is_active = models.BooleanField(default=True)

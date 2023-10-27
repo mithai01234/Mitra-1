@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
+
+from videoupload.models import Video
 from .serializers import CustomUserSerializer,PasswordResetSerializer,PasswordUpdateSerializer
 import boto3
 from rest_framework.views import APIView
@@ -22,6 +24,140 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.decorators import api_view
 from decimal import Decimal
 
+# class RegistrationView(APIView):
+#     def post(self, request):
+#         serializer = CustomUserSerializer(data=request.data)
+#
+#         if serializer.is_valid():
+#             user = serializer.save()
+#
+#             # Check if a referral code was provided by the user
+#             referral_code = request.data.get('referral_code')
+#             if referral_code:
+#                 try:
+#                     referrer = CustomUser.objects.get(username_code=referral_code)
+#
+#                     # Determine the level of the new user
+#                     if referrer.username_code:
+#                         sponsor_username_code = referrer.username_code
+#                         try:
+#                             sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+#                         except CustomUser.DoesNotExist:
+#                             sponsor = None
+#
+#                         if sponsor:
+#                             user_level = sponsor.level + 1
+#                         else:
+#                             user_level = 1
+#                     else:
+#                         user_level = 1
+#
+#                     # Set the level for the new user
+#                     user.level = user_level
+#                     user.save()
+#
+#
+#
+#
+#
+#
+#
+#
+#                     if referrer.username_code:
+#                         sponsor_username_code = referrer.username_code
+#                         try:
+#                             sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+#                         except CustomUser.DoesNotExist:
+#                             sponsor = None
+#
+#                         if sponsor:
+#                             # Define the reward amount based on the level
+#                             amount=0.40
+#
+#                             # Create a TableJoining record for the sponsor at this level
+#                             TableJoining.objects.create(uid=sponsor, sponser_id=user, amount=amount,
+#                                                         total_amount=sponsor.total_amount)
+#
+#                             # Update the total_amount for the sponsor
+#                             sponsor.total_amount += Decimal(amount)
+#                             sponsor.save()
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#                     # Generate income for referrers at different levels
+#                     for level in range(1, user_level+1):
+#                         # Check if the referrer has a sponsor at this level
+#                         if referrer.referral_code:
+#                             sponsor_username_code = referrer.referral_code
+#                             try:
+#                                 sponsor = CustomUser.objects.get(username_code=sponsor_username_code)
+#                             except CustomUser.DoesNotExist:
+#                                 sponsor = None
+#
+#                             if sponsor:
+#                                 # Define the reward amount based on the level
+#                                 if level == 1:
+#                                     amount = 0.15
+#                                 elif level == 2:
+#                                     amount = 0.10
+#                                 elif level == 3:
+#                                     amount = 0.10
+#                                 elif level == 4:
+#                                     amount = 0.10
+#                                 elif level == 5:
+#                                     amount = 0.10
+#                                 elif level == 6:
+#                                     amount = 0.05
+#                                 elif level == 7:
+#                                     amount = 0.05
+#                                 elif level == 8:
+#                                     amount = 0.05
+#                                 elif level == 9:
+#                                     amount = 0.05
+#                                 elif level == 10:
+#                                     amount = 0.03
+#                                 elif level == 11:
+#                                     amount = 0.03
+#                                 elif level == 12:
+#                                     amount = 0.03
+#                                 elif level == 13:
+#                                     amount = 0.02
+#                                 elif level == 14:
+#                                     amount = 0.02
+#                                 else:
+#                                     amount = 0.0  # Adjust for higher levels as needed
+#
+#                                 # Create a TableJoining record for the sponsor at this level
+#                                 TableJoining.objects.create(uid=sponsor, sponser_id=user, amount=amount,
+#                                                             total_amount=sponsor.total_amount)
+#
+#                                 # Update the total_amount for the sponsor
+#                                 sponsor.total_amount += Decimal(amount)
+#                                 sponsor.save()
+#
+#                                 # Set the sponsor as the new referrer for the next level
+#                                 referrer = sponsor
+#                             else:
+#                                 # No sponsor at this level, break out of the loop
+#                                 break
+#
+#                 except CustomUser.DoesNotExist:
+#                     pass
+#
+#             return Response({'message': 'Registration successful'}, status=201)
+#
+#         return Response(serializer.errors, status=400)
 class RegistrationView(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
@@ -30,9 +166,12 @@ class RegistrationView(APIView):
             user = serializer.save()
 
             # Check if a referral code was provided by the user
-            referral_code = request.data.get('referral_code')
+            referral_code = request.data.get('referral_code', 'admi_1541')
+
             if referral_code:
+                user.referral_code = referral_code
                 try:
+
                     referrer = CustomUser.objects.get(username_code=referral_code)
 
                     # Determine the level of the new user
@@ -181,6 +320,36 @@ class RegistrationView(APIView):
 #     referral.points = points
 #     referral.save()
 #
+from .serializers import ProfileUpdateSerializer
+
+class ProfileUpdateView(APIView):
+
+    def put(self, request):
+        user_id = request.data.get('id', None)
+        name = request.data.get('name', None)
+        bio = request.data.get('bio', None)
+        profile_photo = request.data.get('profile_photo', None)
+
+        if user_id is None:
+            return Response({'error': 'User ID is required'}, status=400)
+
+        try:
+            user = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        if name is not None:
+            user.name = name
+        if bio is not None:
+            user.bio = bio
+        if profile_photo is not None:
+            user.profile_photo = profile_photo
+
+        user.save()
+
+        serializer = ProfileUpdateSerializer(user)
+        return Response(serializer.data)
+
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 
@@ -241,7 +410,16 @@ class LoginView(APIView):
             return Response(response_data, status=200)
         return Response({'error': 'Invalid credentials'}, status=401)
 
+from django.db.models import Count
+def video_count_per_user(request):
+    user_id = request.GET.get('user_id', None)
 
+    if user_id is not None:
+        video_count = Video.objects.filter(user_id=user_id).count()
+        video_count_dict = {user_id: video_count}
+        return JsonResponse(video_count_dict)
+    else:
+        return JsonResponse({'error': 'user_id parameter is required'}, status=400)
 @api_view(['POST'])
 def request_password_reset(request):
     serializer = PasswordResetSerializer(data=request.data)

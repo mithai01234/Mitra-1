@@ -10,7 +10,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('phone_number', 'name', 'password', 'email','referral_code')
+        fields = ('phone_number', 'name', 'password', 'email', 'referral_code', 'profile_photo', 'bio')
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -26,7 +26,8 @@ class PersonSerializer(serializers.ModelSerializer):
         fields = '__all__'  # Serialize all fields of the model
 class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
-from .models import OTP
+from .models import OTP, CustomUser
+
 
 class OTPSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,6 +36,10 @@ class OTPSerializer(serializers.ModelSerializer):
 class PasswordUpdateSerializer(serializers.Serializer):
     otp = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'name', 'bio', 'profile_photo')
 # class UserProfileSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = UserProfile

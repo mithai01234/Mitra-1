@@ -142,24 +142,33 @@ WSGI_APPLICATION = 'Mitra.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgresqladmin',
-        'PASSWORD': 'Siance@123',
-        'HOST': 'sspmitra.postgres.database.azure.com',
-        'PORT': '5432',  # The default PostgreSQL port
-    }
-#       'custom_user_db': {
+# DATABASES = {
+#     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
 #         'NAME': 'postgres',
 #         'USER': 'postgresqladmin',
 #         'PASSWORD': 'Siance@123',
-#         'HOST': 'chatdb.postgres.database.azure.com',
+#         'HOST': 'sspmitra.postgres.database.azure.com',
 #         'PORT': '5432',  # The default PostgreSQL port
-#     },
- }
+#     }
+# #       'custom_user_db': {
+# #         'ENGINE': 'django.db.backends.postgresql',
+# #         'NAME': 'postgres',
+# #         'USER': 'postgresqladmin',
+# #         'PASSWORD': 'Siance@123',
+# #         'HOST': 'chatdb.postgres.database.azure.com',
+# #         'PORT': '5432',  # The default PostgreSQL port
+# #     },
+#  }
+
+
+
+
+
+
+
+
+
 # DATABASE_ROUTERS = [
 #     'Mitra.custom_user_router.CustomUserRouter',
 # ]
@@ -173,15 +182,24 @@ DATABASES = {
 #     }
 # }
 
-
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'defaultdb',
+        'USER': 'vultradmin',
+        'PASSWORD': 'AVNS_9kb5IW7kOfkbLYcH5Xs',
+        'HOST': 'vultr-prod-653ca7f5-d140-4221-9802-209c3156704e-vultr-prod-8ba8.vultrdb.com',  # Replace with your PostgreSQL server's address if necessary
+        'PORT': '16751',          # Leave empty to use the default PostgreSQL port (usually 5432)
+    }
+}
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'Mitra',
-#         'USER': 'postgres',
-#         'PASSWORD': 'siance',
+#         'NAME': 'Backend Database',
+#         'USER': 'vultradmin',
+#         'PASSWORD': 'AVNS_9kb5IW7kOfkbLYcH5Xs',
 #         'HOST': 'localhost',  # Replace with your PostgreSQL server's address if necessary
-#         'PORT': '5432',          # Leave empty to use the default PostgreSQL port (usually 5432)
+#         'PORT': '16751',          # Leave empty to use the default PostgreSQL port (usually 5432)
 #     }
 # }
 AUTH_USER_MODEL = 'registration.CustomUser'
@@ -261,14 +279,75 @@ EMAIL_HOST_PASSWORD = 'yswq okhi enmt vgzo'
 
 
 import os
-from storages.backends.azure_storage import AzureStorage
+# from storages.backends.azure_storage import AzureStorage
+#
+#
+# # AZURE_ACCOUNT_NAME = 'csg10032002fb0ba2aa'
+# # AZURE_ACCOUNT_KEY = '6ofACEdLTIu0s4CnDRTRmsfrrtGQMC1kCn5Rz4KLx4KWY3ChKUDAqtkSHoccwphTybD+GeuCjrZ7+AStmLP0bw=='
+# # AZURE_CONTAINER = 'filecont'
+# #
+# # DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+# # AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+# #
+# # MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
 
-AZURE_ACCOUNT_NAME = 'csg10032002fb0ba2aa'
-AZURE_ACCOUNT_KEY = '6ofACEdLTIu0s4CnDRTRmsfrrtGQMC1kCn5Rz4KLx4KWY3ChKUDAqtkSHoccwphTybD+GeuCjrZ7+AStmLP0bw=='
-AZURE_CONTAINER = 'filecont'
 
-DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
 
-MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# import vultr
+#
+# # Vultr Object Storage settings
+# VULTR_API_KEY = 'ZDO4X43RG77KPCPOIW5G3GWO5LJ75KD6HHYA'
+# VULTR_OBJECT_STORAGE_NAME = 'MitraStorage'
+# VULTR_CONTAINER = 'storagemi'
+#
+# # Initialize the Vultr client
+# vultr_client = vultr.Vultr(VULTR_API_KEY)
+#
+# # List your Vultr Object Storage instances
+# object_storage_instances = vultr_client.object_storage.list()
+#
+# # Find the Object Storage instance with the name "MitraStorage"
+# instance_id = None
+# for instance in object_storage_instances:
+#     if instance['label'] == VULTR_OBJECT_STORAGE_NAME:
+#         instance_id = instance['object_storage_id']
+#         break
+#
+# if instance_id:
+#     # Upload a file to the chosen instance
+#     file_path = 'path_to_your_local_file.txt'
+#     object_name = 'my_uploaded_file.txt'
+#
+#     with open(file_path, 'rb') as file:
+#         vultr_client.object_storage.upload(instance_id, VULTR_CONTAINER, object_name, file)
+#
+#     # List objects in your instance
+#     objects = vultr_client.object_storage.list_objects(instance_id, VULTR_CONTAINER)
+#
+#     # Delete an object from the instance
+#     object_name_to_delete = 'my_uploaded_file.txt'
+#     vultr_client.object_storage.delete_object(instance_id, VULTR_CONTAINER, object_name_to_delete)
+# else:
+#     print(f"Object Storage instance '{VULTR_OBJECT_STORAGE_NAME}' not found.")
+#
+# settings.py
+#
+# import vultr
+#
+# # Vultr Object Storage settings
+# VULTR_API_KEY = 'ZDO4X43RG77KPCPOIW5G3GWO5LJ75KD6HHYA'
+# VULTR_OBJECT_STORAGE_NAME = 'MitraStorage'
+# VULTR_CONTAINER = 'your-new-bucket'
+#
+# # Vultr Object Storage URL
+# VULTR_CUSTOM_DOMAIN = f'{VULTR_OBJECT_STORAGE_NAME}.objectstorage.vultr.com'
+# MEDIA_URL = f'https://{VULTR_CUSTOM_DOMAIN}/{VULTR_CONTAINER}/'
+#
+# # Initialize the Vultr client
+# vultr_client = vultr.Vultr(VULTR_API_KEY)
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+#change the database, 276-83 and urls-40-41 comment this
+
+
+

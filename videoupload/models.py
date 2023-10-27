@@ -16,11 +16,15 @@ class Video(models.Model):
     share_count = models.PositiveIntegerField(default=0)
     video_blob_name = models.CharField(max_length=255,null=True)
     thumbnail = models.ImageField(upload_to='videos/', null=True, blank=True)
-
+    # file_url = models.URLField(blank=True, null=True)
+    # thumbnail_url = models.URLField(blank=True, null=True)
     def __str__(self):
         return f"{self.id}"
 
-
+class Point(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    points = models.PositiveIntegerField(default=0)
+    is_share = models.IntegerField(default=0)
 class Like(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     video = models.ForeignKey(Video, on_delete=models.CASCADE)

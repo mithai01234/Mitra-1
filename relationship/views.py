@@ -7,6 +7,11 @@ from .models import Follow
 from registration.models import CustomUser
 from rest_framework.permissions import BasePermission
 from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import CustomUser, Follow
+
 @api_view(['POST'])
 def toggle_follow(request):
     target_user_id = request.data.get('target_user_id')
@@ -33,10 +38,8 @@ def toggle_follow(request):
         # If no relationship exists, create a new follow request
         Follow.objects.create(followed_id=user.id, follower_id=target_user.id)
         return Response({'message': f'Follow request sent to user with ID {target_user_id}'}, status=201)
-# {
-# "target_user_id":18,
-# "user_id":13
-#  }
+
+
 @api_view(['GET'])
 def get_follow_requests(request):
     user_id = request.GET.get('user_id')
@@ -49,71 +52,73 @@ def get_follow_requests(request):
     except CustomUser.DoesNotExist:
         return Response({'error': f'User with ID {user_id} does not exist'}, status=400)
 
-    follow_requests = Follow.objects.filter(follower_id=user.id, approved=False)
-    serialized_requests = [{'id': req.id, 'requester': req.follower.name} for req in follow_requests]
+    follow_requests = Follow.objects.filter(followed_id=user.id, approved=False)
+
+    serialized_requests = [{'id': user.id,'name':user.name,'requester_id': req.follower.id} for req in follow_requests]
 
     return Response({'follow_requests': serialized_requests})
+
+
 @api_view(['POST'])
 def remove_follow_request(request):
-    request_id = request.data.get('request_id')
+    requester_id = request.data.get('requester_id')
     user_id = request.data.get('user_id')
 
-    if request_id is None:
-        return Response({'error': 'Missing request_id in request data'}, status=400)
+    if requester_id is None:
+        return Response({'error': 'Missing requester_id in request data'}, status=400)
 
     try:
-        follow_request = Follow.objects.get(id=request_id, follower=user_id , approved=False,  hidden=False)
-    except Follow.DoesNotExist:
-        return Response({'error': f'Follow request with ID {request_id} does not exist or is not pending'}, status=400)
+        requester = CustomUser.objects.get(id=requester_id)
+    except CustomUser.DoesNotExist:
+        return Response({'error': f'Requester with ID {requester_id} does not exist'}, status=400)
 
-    follow_request.delete()
-    return Response({'message': f'Follow request with ID {request_id} has been removed'}, status=200)
-@api_view(['POST'])
+    # Find and delete the pending follow request sent by the requester to the user
+    follow_request = Follow.objects.filter(follower=requester, followed_id=user_id, approved=False, hidden=False).first()
 
-def approve_follow_request(request):
-    request_id = request.data.get('request_id')
-    user_id = request.data.get('user_id')
-
-    follow_request = get_object_or_404(Follow, id=request_id, follower_id=user_id, approved=False)
-    follow_request.approved = True
-    follow_request.hidden = True
-    follow_request.save()
-    return JsonResponse({'message': 'Follow request approved'})
+    if follow_request:
+        follow_request.delete()
+        return Response({'message': f'Follow request from requester with ID {requester_id} has been removed'}, status=200)
+    else:
+        return Response({'error': 'No pending follow request from the requester to the user'}, status=400)
 
 
 # @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def unfollow(request, name):
-#     user_to_unfollow = get_object_or_404(CustomUser, id=name)
+# def approve_follow_request(request):
+#     request_id = request.data.get('request_id')
+#     user_id = request.data.get('user_id')
 #
 #     try:
-#         # Attempt to retrieve the follow relationship and delete it
-#         follow_relation = Follow.objects.get(followed_id=request.user.id, follower_id=user_to_unfollow.id)
-#         follow_relation.delete()
-#         return JsonResponse({'message': f'You have unfollowed user with ID {name}'})
+#         follow_request = Follow.objects.get(id=request_id, followed_id=user_id, approved=False, hidden=False)
 #     except Follow.DoesNotExist:
-#         return JsonResponse({'error': 'Follow relationship does not exist'}, status=400)
+#         return Response({'error': f'Follow request with ID {request_id} does not exist or is not pending'}, status=400)
+#
+#     follow_request.approved = True
+#     follow_request.hidden = True
+#     follow_request.save()
+#     return Response({'message': 'Follow request approved'}, status=200)
+@api_view(['POST'])
+def approve_follow_request(request):
+    user_id = request.data.get('user_id')
+    requester_id = request.data.get('requester_id')
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def followers_count(request, name):
-#     user = get_object_or_404(CustomUser, id=name)
-#
-#     # Count the number of followers
-#     followers_count = Follow.objects.filter(followed=user, approved=True).count()
-#
-#     return JsonResponse({'followers_count': followers_count})
-#
-#
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])#this only line is responsible for authentication
-# def following_count(request, name):
-#     user = get_object_or_404(CustomUser, id=name)
-#
-#     # Count the number of following
-#     following_count = Follow.objects.filter(follower=user, approved=True).count()
-#
-#     return JsonResponse({'following_count': following_count})
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        requester = CustomUser.objects.get(id=requester_id)
+    except CustomUser.DoesNotExist:
+        return Response({'error': f'User with ID {user_id} or {requester_id} does not exist'}, status=400)
+
+    # Check if there is a pending follow request from the requester to the user
+    follow_request = Follow.objects.filter(follower=requester, followed=user, approved=False, hidden=False).first()
+
+    if follow_request:
+        # Approve the follow request
+        follow_request.approved = True
+        follow_request.hidden = True
+        follow_request.save()
+
+        return Response({'message': 'Follow request approved', 'requester_id': requester.id}, status=200)
+    else:
+        return Response({'error': 'No pending follow request from the requester to the user'}, status=400)
 
 @api_view(['GET'])
 def followers_count(request):
@@ -128,9 +133,16 @@ def followers_count(request):
         return Response({'error': f'User with ID {user_id} does not exist'}, status=400)
 
     # Retrieve the followers with approved follow relationships
-    followers = Follow.objects.filter(followed=user, approved=True).values_list('follower__name', flat=True)
+    followers = Follow.objects.filter(followed=user, approved=True)
 
-    return Response({'followers_count': len(followers), 'followers': list(followers)})
+    # Extract the IDs and names of the followers
+    followers_data = [{'id': follower.follower_id, 'name': follower.follower.name} for follower in followers]
+
+    return Response({'followers_count': len(followers_data), 'followers': followers_data})
+
+
+# Define the 'following_count' view similarly as 'followers_count' for users the specified user is following.
+
 
 @api_view(['GET'])
 def following_count(request):
@@ -145,9 +157,13 @@ def following_count(request):
         return Response({'error': f'User with ID {user_id} does not exist'}, status=400)
 
     # Retrieve the users that the specified user is following with approved follow relationships
-    following = Follow.objects.filter(follower=user, approved=True).values_list('followed__name', flat=True)
+    following = Follow.objects.filter(follower=user, approved=True)
 
-    return Response({'following_count': len(following), 'following': list(following)})
+    # Extract the IDs and names of the users being followed
+    following_data = [{'id': followed.followed_id, 'name': followed.followed.name} for followed in following]
+
+    return Response({'following_count': len(following_data), 'following': following_data})
+
 @api_view(['POST'])
 def block_user(request):
     user_id = request.data.get('user_id')
