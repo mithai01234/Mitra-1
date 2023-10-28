@@ -292,6 +292,20 @@ import os
 # # MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/'
 
 
+# settings.py
+
+import boto3
+
+# Vultr Object Storage credentials
+VULTR_HOSTNAME = "blr1.vultrobjects.com"
+VULTR_ACCESS_KEY = "3M5ECKPL2BBJUK7C2IPG"
+VULTR_SECRET_KEY = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
+VULTR_BUCKET_NAME = "your-new-bucket"  # Replace with your bucket name
+
+# Initialize the Boto3 S3 client
+session = boto3.session.Session()
+VULTR_S3_CLIENT = session.client('s3', region_name=VULTR_HOSTNAME.split('.')[0], endpoint_url=f"https://{VULTR_HOSTNAME}",
+                                 aws_access_key_id=VULTR_ACCESS_KEY, aws_secret_access_key=VULTR_SECRET_KEY)
 
 # import vultr
 #

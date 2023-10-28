@@ -54,12 +54,5 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 # "referral_code":"dsfsdf"
 #
 # }
-# {
-# "phone_number":"9823082902",
-# "name":"Srutee",
-# "password":"Srutee123456",
 #
-# "email":"fghast@gmail.com",
-# "referral_code":"dsfsdf"
-#
-# }
+
