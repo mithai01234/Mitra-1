@@ -74,76 +74,76 @@ class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
-    # def create(self, request, *args, **kwargs):
-    #     serializer = VideoSerializer(data=request.data)
-    #
-    #     if serializer.is_valid():
-    #         video_file = request.data.get('file')
-    #         title = serializer.validated_data.get('title', '')
-    #
-    #         if not video_file:
-    #             return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
-    #
-    #         try:
-    #             # Initialize the Boto3 S3 client for Vultr Object Storage
-    #             hostname = "blr1.vultrobjects.com"
-    #             secret_key = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
-    #             access_key = "3M5ECKPL2BBJUK7C2IPG"
-    #
-    #             session = boto3.session.Session()
-    #             client = session.client('s3', **{
-    #                 "region_name": hostname.split('.')[0],
-    #                 "endpoint_url": "https://" + hostname,
-    #                 "aws_access_key_id": access_key,
-    #                 "aws_secret_access_key": secret_key
-    #             })
-    #
-    #             # Specify the S3 bucket in Vultr Object Storage where you want to upload the video
-    #             bucket_name = 'your-new-bucket'
-    #
-    #             # Ensure a unique object key for S3
-    #             object_key = f"{title}_{uuid.uuid4()}_compressed.mp4"
-    #
-    #             # Create a temporary file for the video
-    #             with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video_file:
-    #                 temp_video_path = temp_video_file.name
-    #                 for chunk in video_file.chunks():
-    #                     temp_video_file.write(chunk)
-    #
-    #             # Upload the video to the specified S3 bucket
-    #             client.upload_file(temp_video_path, bucket_name, object_key)
-    #
-    #             # Generate the S3 URL of the uploaded video
-    #             video_url = f"https://{hostname}/{bucket_name}/{object_key}"
-    #
-    #             # Save the video data to your database
-    #             serializer.save(file=video_url)
-    #
-    #             # Generate and save the thumbnail
-    #             thumbnail_path = self.generate_and_save_thumbnail(temp_video_path)
-    #             if thumbnail_path:
-    #                 thumbnail_key = f"{title}_{uuid.uuid4()}_thumbnail.jpg"
-    #
-    #                 # Upload the thumbnail to Vultr Object Storage
-    #                 client.upload_file(thumbnail_path, bucket_name, thumbnail_key)
-    #
-    #                 # Set the thumbnail URL in the serializer
-    #                 thumbnail_url = f"https://{hostname}/{bucket_name}/{thumbnail_key}"
-    #                 serializer.instance.thumbnail = thumbnail_url
-    #                 serializer.instance.save()
-    #
-    #                 # Clean up temporary files
-    #                 os.remove(thumbnail_path)
-    #
-    #             # Clean up temporary video file
-    #             os.remove(temp_video_path)
-    #
-    #             return Response({'message': 'Video uploaded successfully'}, status=status.HTTP_201_CREATED)
-    #
-    #         except Exception as e:
-    #             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def create(self, request, *args, **kwargs):
+        serializer = VideoSerializer(data=request.data)
+
+        if serializer.is_valid():
+            video_file = request.data.get('file')
+            title = serializer.validated_data.get('title', '')
+
+            if not video_file:
+                return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                # Initialize the Boto3 S3 client for Vultr Object Storage
+                hostname = "blr1.vultrobjects.com"
+                secret_key = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
+                access_key = "3M5ECKPL2BBJUK7C2IPG"
+
+                session = boto3.session.Session()
+                client = session.client('s3', **{
+                    "region_name": hostname.split('.')[0],
+                    "endpoint_url": "https://" + hostname,
+                    "aws_access_key_id": access_key,
+                    "aws_secret_access_key": secret_key
+                })
+
+                # Specify the S3 bucket in Vultr Object Storage where you want to upload the video
+                bucket_name = 'your-new-bucket'
+
+                # Ensure a unique object key for S3
+                object_key = f"{title}_{uuid.uuid4()}_compressed.mp4"
+
+                # Create a temporary file for the video
+                with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video_file:
+                    temp_video_path = temp_video_file.name
+                    for chunk in video_file.chunks():
+                        temp_video_file.write(chunk)
+
+                # Upload the video to the specified S3 bucket
+                client.upload_file(temp_video_path, bucket_name, object_key)
+
+                # Generate the S3 URL of the uploaded video
+                video_url = f"https://{hostname}/{bucket_name}/{object_key}"
+
+                # Save the video data to your database
+                serializer.save(file=video_url)
+
+                # Generate and save the thumbnail
+                thumbnail_path = self.generate_and_save_thumbnail(temp_video_path)
+                if thumbnail_path:
+                    thumbnail_key = f"{title}_{uuid.uuid4()}_thumbnail.jpg"
+
+                    # Upload the thumbnail to Vultr Object Storage
+                    client.upload_file(thumbnail_path, bucket_name, thumbnail_key)
+
+                    # Set the thumbnail URL in the serializer
+                    thumbnail_url = f"https://{hostname}/{bucket_name}/{thumbnail_key}"
+                    serializer.instance.thumbnail = thumbnail_url
+                    serializer.instance.save()
+
+                    # Clean up temporary files
+                    os.remove(thumbnail_path)
+
+                # Clean up temporary video file
+                os.remove(temp_video_path)
+
+                return Response({'message': 'Video uploaded successfully'}, status=status.HTTP_201_CREATED)
+
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
