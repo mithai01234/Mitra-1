@@ -295,17 +295,17 @@ import os
 # settings.py
 
 import boto3
-
-# Vultr Object Storage credentials
-VULTR_HOSTNAME = "blr1.vultrobjects.com"
-VULTR_ACCESS_KEY = "3M5ECKPL2BBJUK7C2IPG"
-VULTR_SECRET_KEY = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
-VULTR_BUCKET_NAME = "your-new-bucket"  # Replace with your bucket name
-
-# Initialize the Boto3 S3 client
-session = boto3.session.Session()
-VULTR_S3_CLIENT = session.client('s3', region_name=VULTR_HOSTNAME.split('.')[0], endpoint_url=f"https://{VULTR_HOSTNAME}",
-                                 aws_access_key_id=VULTR_ACCESS_KEY, aws_secret_access_key=VULTR_SECRET_KEY)
+#
+# # Vultr Object Storage credentials
+# VULTR_HOSTNAME = "blr1.vultrobjects.com"
+# VULTR_ACCESS_KEY = "3M5ECKPL2BBJUK7C2IPG"
+# VULTR_SECRET_KEY = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
+# VULTR_BUCKET_NAME = "your-new-bucket"  # Replace with your bucket name
+#
+# # Initialize the Boto3 S3 client
+# session = boto3.session.Session()
+# VULTR_S3_CLIENT = session.client('s3', region_name=VULTR_HOSTNAME.split('.')[0], endpoint_url=f"https://{VULTR_HOSTNAME}",
+#                                  aws_access_key_id=VULTR_ACCESS_KEY, aws_secret_access_key=VULTR_SECRET_KEY)
 
 # import vultr
 #
@@ -360,8 +360,33 @@ VULTR_S3_CLIENT = session.client('s3', region_name=VULTR_HOSTNAME.split('.')[0],
 # # Initialize the Vultr client
 # vultr_client = vultr.Vultr(VULTR_API_KEY)
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 #change the database, 276-83 and urls-40-41 comment this
+# settings.py
+
+# # Use S3 for media storage
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# AWS_STORAGE_BUCKET_NAME = 'your-new-bucket'  # Replace with your bucket name
+# AWS_S3_REGION_NAME = 'blr1.vultrobjects.com'
+# AWS_ACCESS_KEY_ID = '3M5ECKPL2BBJUK7C2IPG'
+# AWS_SECRET_ACCESS_KEY = 'Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU'
+
+
+
+# settings.py
+# settings.py
+
+# settings.py
+
+AWS_ACCESS_KEY_ID = '3M5ECKPL2BBJUK7C2IPG'
+AWS_SECRET_ACCESS_KEY = 'Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU'
+AWS_STORAGE_BUCKET_NAME = 'your-new-bucket'  # Replace with your Vultr Object Storage bucket name
+AWS_S3_ENDPOINT_URL = 'https://blr1.vultrobjects.com'  # Use your Vultr Object Storage endpoint
+
+# Use the Vultr S3Boto3Storage backend
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+
 
 
 

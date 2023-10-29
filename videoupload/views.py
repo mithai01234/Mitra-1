@@ -69,6 +69,11 @@ from rest_framework import status
 from rest_framework.response import Response
  # Replace 'your_app' with your actual app name
 import boto3
+from storages.backends.s3boto3 import S3Boto3Storage
+
+
+
+
 
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
@@ -85,114 +90,39 @@ class VideoViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                # Initialize the Boto3 S3 client for Vultr Object Storage
-                hostname = "blr1.vultrobjects.com"
-                secret_key = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
-                access_key = "3M5ECKPL2BBJUK7C2IPG"
-
-                session = boto3.session.Session()
-                client = session.client('s3', **{
-                    "region_name": hostname.split('.')[0],
-                    "endpoint_url": "https://" + hostname,
-                    "aws_access_key_id": access_key,
-                    "aws_secret_access_key": secret_key
-                })
-
-                # Specify the S3 bucket in Vultr Object Storage where you want to upload the video
-                bucket_name = 'your-new-bucket'
-
-                # Ensure a unique object key for S3
-                object_key = f"{title}_{uuid.uuid4()}_compressed.mp4"
-
-                # Create a temporary file for the video
-                with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_video_file:
-                    temp_video_path = temp_video_file.name
-                    for chunk in video_file.chunks():
-                        temp_video_file.write(chunk)
-
-                # Upload the video to the specified S3 bucket
-                client.upload_file(temp_video_path, bucket_name, object_key)
-
-                # Generate the S3 URL of the uploaded video
-                video_url = f"https://{hostname}/{bucket_name}/{object_key}"
-
-                # Save the video data to your database
-                serializer.save(file=video_url)
-
-                # Generate and save the thumbnail
-                thumbnail_path = self.generate_and_save_thumbnail(temp_video_path)
-                if thumbnail_path:
-                    thumbnail_key = f"{title}_{uuid.uuid4()}_thumbnail.jpg"
-
-                    # Upload the thumbnail to Vultr Object Storage
-                    client.upload_file(thumbnail_path, bucket_name, thumbnail_key)
-
-                    # Set the thumbnail URL in the serializer
-                    thumbnail_url = f"https://{hostname}/{bucket_name}/{thumbnail_key}"
-                    serializer.instance.thumbnail = thumbnail_url
-                    serializer.instance.save()
-
-                    # Clean up temporary files
-                    os.remove(thumbnail_path)
-
-                # Clean up temporary video file
-                os.remove(temp_video_path)
-
-                return Response({'message': 'Video uploaded successfully'}, status=status.HTTP_201_CREATED)
-
-            except Exception as e:
-                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-    def create(self, request, *args, **kwargs):
-        serializer = VideoSerializer(data=request.data)
-
-        if serializer.is_valid():
-            video_file = request.data.get('file')
-            title = serializer.validated_data.get('title', '')
-
-            if not video_file:
-                return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                # Save the uploaded video to a temporary location
-                temporary_video_path = self.save_uploaded_video(video_file)
-
-                if not temporary_video_path:
-                    return Response({'error': 'Failed to save video'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-                # Compress the video
-                compressed_video_path = self.compress_video(temporary_video_path)
-
-                if not compressed_video_path:
-                    return Response({'error': 'Failed to compress video'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-                # Upload the video file to Vultr Object Storage
-                # You can use the Vultr Object Storage code provided earlier to upload the video.
-
-                # Assuming you have the file name and URL after uploading to Vultr
-                video_blob_name = 'uploaded_video.mp4'
-                file_url = 'https://your-vultr-object-storage-url.com/storagemi/' + video_blob_name
-
-                # Generate a thumbnail from the video
-                thumbnail_path = self.generate_and_save_thumbnail(temporary_video_path)
-
-                # Save video metadata to the database
-                serializer.save(
-                    video_blob_name=video_blob_name,
-                    file=file_url,
-                    thumbnail=thumbnail_path
+                # Initialize the S3 client for Vultr Object Storage
+                s3 = boto3.client(
+                    's3',
+                    endpoint_url='https://blr1.vultrobjects.com',  # Vultr Object Storage endpoint
+                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
                 )
 
+                # Generate a unique key for the video file
+                video_key = f'{title}_{uuid.uuid4()}_original.mp4'
+
+                # Upload the video directly to Vultr Object Storage
+                with open(video_file.temporary_file_path(), 'rb') as video_data:
+                    s3.upload_fileobj(video_data, settings.AWS_STORAGE_BUCKET_NAME, video_key)
+
+                # Generate a thumbnail from the video and save it
+                thumbnail_path = self.generate_and_save_thumbnail(video_file.temporary_file_path())
+
+                # Generate a unique key for the thumbnail file
+                thumbnail_key = f'{title}_{uuid.uuid4()}_thumbnail.jpg'
+
+                # Upload the thumbnail image directly to Vultr Object Storage
+                with open(thumbnail_path, 'rb') as thumbnail_data:
+                    s3.upload_fileobj(thumbnail_data, settings.AWS_STORAGE_BUCKET_NAME, thumbnail_key)
+
+                # Save the video data to the database, including the video and thumbnail keys
+                serializer.save(file=video_key, thumbnail=thumbnail_key)
+
                 # Clean up temporary files
-                os.remove(temporary_video_path)
-                os.remove(compressed_video_path)
                 os.remove(thumbnail_path)
 
-                return Response({'message': 'Video uploaded, compressed, and metadata stored successfully'}, status=status.HTTP_201_CREATED)
+                return Response({'message': 'Video uploaded successfully'},
+                                status=status.HTTP_201_CREATED)
 
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -202,7 +132,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     def generate_and_save_thumbnail(self, video_path):
         try:
             # Load the video using MoviePy
-            video = VideoFileClip(video_path)
+            video = mp.VideoFileClip(video_path)
 
             # Generate the thumbnail from the first frame of the video
             thumbnail = video.get_frame(0)
@@ -223,16 +153,16 @@ class VideoViewSet(viewsets.ModelViewSet):
     def save_uploaded_video(self, uploaded_video):
         try:
             # Create a FileSystemStorage instance for saving the uploaded video
-            fs = FileSystemStorage()
+            fs = S3Boto3Storage()
 
-            # Generate a unique temporary file name
-            temporary_video_name = fs.get_available_name("temp_video.mp4")
+            # Generate a unique key for the temporary video
+            temporary_video_key = f'temp_video_{uuid.uuid4()}.mp4'
 
             # Save the uploaded video to the temporary location
-            temporary_video_path = fs.save(temporary_video_name, uploaded_video)
+            fs.save(temporary_video_key, uploaded_video)
 
-            # Get the full file path of the saved temporary video
-            return os.path.join(fs.location, temporary_video_path)
+            # Return the URL of the saved video in Vultr Object Storage
+            return fs.url(temporary_video_key)
         except Exception as e:
             # Handle any errors that may occur during video saving
             print(f"Video saving error: {str(e)}")
@@ -241,7 +171,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     def compress_video(self, video_path):
         try:
             # Load the video using MoviePy
-            video = VideoFileClip(video_path)
+            video = mp.VideoFileClip(video_path)
 
             # Define the output file path for the compressed video
             compressed_video_path = "compressed_video.mp4"
@@ -263,6 +193,7 @@ class VideoViewSet(viewsets.ModelViewSet):
             # Handle any errors that may occur during video compression
             print(f"Video compression error: {str(e)}")
             return None
+
 
 # class VideoViewSet(viewsets.ModelViewSet):
 #     queryset = Video.objects.all()
