@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 from django.conf import settings
 from moviepy.editor import VideoFileClip
 import os
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from registration.models import CustomUser
 import moviepy.editor as mp
 from django.conf import settings
@@ -71,11 +72,7 @@ from rest_framework.response import Response
 import boto3
 from storages.backends.s3boto3 import S3Boto3Storage
 
-
-
-
-
-class VideoViewSet(viewsets.ModelViewSet):
+class VideoCreateView(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
@@ -84,39 +81,45 @@ class VideoViewSet(viewsets.ModelViewSet):
 
         if serializer.is_valid():
             video_file = request.data.get('file')
-            title = serializer.validated_data.get('title', '')
+            title = request.data.get('title', '')
 
             if not video_file:
                 return Response({'error': 'No video file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                # Initialize the S3 client for Vultr Object Storage
-                s3 = boto3.client(
-                    's3',
-                    endpoint_url='https://blr1.vultrobjects.com',  # Vultr Object Storage endpoint
-                    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+                # Define your Vultr Object Storage settings
+                hostname = "blr1.vultrobjects.com"
+                secret_key = "Q60vtZGsZkJ7P7dwfHdJzzNHT3E4RzjeI0dlYEbU"
+                access_key = "3M5ECKPL2BBJUK7C2IPG"
+                bucket_name = 'your-new-bucket'  # Replace with the name of your bucket
+
+                session = boto3.Session(
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
                 )
+                s3_client = session.client('s3', endpoint_url=f"https://{hostname}")
 
                 # Generate a unique key for the video file
-                video_key = f'{title}_{uuid.uuid4()}_original.mp4'
+                video_object_key = f'videos/{title}_{uuid.uuid4()}_original.mp4'
 
-                # Upload the video directly to Vultr Object Storage
-                with open(video_file.temporary_file_path(), 'rb') as video_data:
-                    s3.upload_fileobj(video_data, settings.AWS_STORAGE_BUCKET_NAME, video_key)
+                # Upload the video to Vultr Object Storage
+                s3_client.upload_fileobj(video_file, bucket_name, video_object_key)
 
                 # Generate a thumbnail from the video and save it
                 thumbnail_path = self.generate_and_save_thumbnail(video_file.temporary_file_path())
 
                 # Generate a unique key for the thumbnail file
-                thumbnail_key = f'{title}_{uuid.uuid4()}_thumbnail.jpg'
+                thumbnail_object_key = f'videos/{title}_{uuid.uuid4()}_thumbnail.jpg'
 
-                # Upload the thumbnail image directly to Vultr Object Storage
+                # Upload the thumbnail image to Vultr Object Storage
                 with open(thumbnail_path, 'rb') as thumbnail_data:
-                    s3.upload_fileobj(thumbnail_data, settings.AWS_STORAGE_BUCKET_NAME, thumbnail_key)
+                    s3_client.upload_fileobj(thumbnail_data, bucket_name, thumbnail_object_key)
 
                 # Save the video data to the database, including the video and thumbnail keys
-                serializer.save(file=video_key, thumbnail=thumbnail_key)
+                serializer.save(
+                    file=video_object_key,
+                    thumbnail=thumbnail_object_key,
+                )
 
                 # Clean up temporary files
                 os.remove(thumbnail_path)
@@ -149,6 +152,7 @@ class VideoViewSet(viewsets.ModelViewSet):
             # Handle any errors that may occur during thumbnail creation
             print(f"Thumbnail creation error: {str(e)}")
             return None
+
 
     def save_uploaded_video(self, uploaded_video):
         try:
@@ -193,6 +197,35 @@ class VideoViewSet(viewsets.ModelViewSet):
             # Handle any errors that may occur during video compression
             print(f"Video compression error: {str(e)}")
             return None
+
+
+
+
+class VideoListView(APIView):
+    def get(self, request):
+        # Retrieve all video objects from the database
+        videos = Video.objects.all()
+
+        # Serialize the video objects to get their data, including the video link
+        serializer = VideoSerializer(videos, many=True)
+
+        # Generate the video URLs based on your Vultr Object Storage settings
+        hostname = "blr1.vultrobjects.com"
+        bucket_name = 'your-new-bucket'  # Replace with the name of your bucket
+
+        video_data = []
+        for video in videos:
+            video_object_key = "videos/" + video.file.name  # Modify the object key as needed
+            video_link = f"https://{hostname}/{bucket_name}/{video_object_key}"
+            video_data.append({
+                "id": video.id,
+                "title": video.title,  # Replace with the actual field name for video title
+                "description": video.description,  # Replace with the actual field name for video description
+                "link": video_link
+            })
+
+        return Response(video_data, status=status.HTTP_200_OK)
+
 
 
 # class VideoViewSet(viewsets.ModelViewSet):

@@ -1,15 +1,17 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import CommentCreateView, GetVideoLink, CommentListView, VideoShareView, ReplyCommentListView, LikeViewSet,CommentCountView, CommentEditView, CommentDeleteView, VideoListView
-from .views import VideoViewSet
+from .views import VideoCreateView, VideoListView
 
 router = DefaultRouter()
-router.register(r'videos', VideoViewSet)
+router.register(r'upload_video', VideoCreateView)
 router.register(r'likes', LikeViewSet)
 
 urlpatterns = [
     # ... other URL patterns ...
     path('api/', include(router.urls)),
+    path('api/videos/list/', VideoListView.as_view(), name='list-videos'),
+    #path('api/upload_video/', VideoCreateView.as_view(), name='video-upload'),
     path('videos/toggle_like/', LikeViewSet.as_view({'post': 'toggle_like'}), name='video-toggle-like'),
     path('likes/like_count/',LikeViewSet.as_view({'get': 'like_count'}), name='video-like-count'),
     path('comment/', CommentCreateView.as_view(), name='comment-create'),

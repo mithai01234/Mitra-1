@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     # 'chatapp'
 
 ]
-from decouple import config
+#from decouple import config
 
 # API_KEY = "tb2V8II2"
 # API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
