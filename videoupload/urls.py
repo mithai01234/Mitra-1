@@ -1,9 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import CommentCreateView, GetVideoLink, CommentListView, VideoShareView, ReplyCommentListView, LikeViewSet,CommentCountView, CommentEditView, CommentDeleteView, VideoListView
-from .views import VideoCreateView, VideoListView
+from .views import VideoCreateView, VideoListView , VideoViewSet
 
 router = DefaultRouter()
+router.register(r'videos', VideoViewSet, basename='video')
 router.register(r'upload_video', VideoCreateView)
 router.register(r'likes', LikeViewSet)
 
